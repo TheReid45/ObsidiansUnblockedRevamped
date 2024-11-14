@@ -28,6 +28,7 @@ function eraseCookie(name) {
 
 let openGamesInNewTab = false;
 let tabCloakGames = false;
+let showFPS = true;
 
 // Function to toggle the open games in new tab setting
 function ToggleOpenGamesInNewTab() {
@@ -38,12 +39,8 @@ function ToggleOpenGamesInNewTab() {
 // Update button text based on setting
 function updateOpenGamesInNewTabToggleButton() {
   const button = document.getElementById("openGamesInNewTabToggleButton");
-  button.innerText = openGamesInNewTab
-    ? "Open games & changes in new tab: Enabled"
-    : "Open games & changes in new tab: Disabled";
-  button.className = openGamesInNewTab
-    ? "settingsButton settingsButtonEnabled"
-    : "settingsButton settingsButtonDisabled";
+  button.innerText = openGamesInNewTab ? "Open games & changes in new tab: Enabled" : "Open games & changes in new tab: Disabled";
+  button.className = openGamesInNewTab ? "settingsButton settingsButtonEnabled" : "settingsButton settingsButtonDisabled";
 }
 
 function ToggleTabCloakGames() {
@@ -54,26 +51,64 @@ function ToggleTabCloakGames() {
 
 function updateTabCloakGamesToggleButton() {
   const button = document.getElementById("tabCloakGamesToggleButton");
-  button.innerText = tabCloakGames
-    ? "Tab cloak games & changes: Enabled"
-    : "Tab cloak games & changes: Disabled";
-  button.className = tabCloakGames
-    ? "settingsButton settingsButtonEnabled"
-    : "settingsButton settingsButtonDisabled";
+  button.innerText = tabCloakGames ? "Tab cloak games & changes: Enabled" : "Tab cloak games & changes: Disabled";
+  button.className = tabCloakGames ? "settingsButton settingsButtonEnabled" : "settingsButton settingsButtonDisabled";
+}
+
+
+function ToggleFps() {
+  if (!showFPS) {
+    showFPS = true;
+    document.getElementById("fps").style.display = "block";
+  } else {
+    showFPS = false;
+    document.getElementById("fps").style.display = "none";
+  }
+  setCookie("showFPSEnabled", showFPS, 30); // Save to cookie
+  updateShowFPSToggleButton();
+}
+
+let lastFrameTime = performance.now();
+let frameCount = 0; 
+let fpsInterval = 0; 
+function updateFps() { 
+  const now = performance.now(); 
+  frameCount++; 
+  const delta = now - lastFrameTime; 
+  if (delta >= 100) { 
+    // Update every second 
+    const fps = (frameCount / delta) * 1000; 
+    document.getElementById("fps").innerText = "FPS: " + Math.round(fps); 
+    frameCount = 0; 
+    lastFrameTime = now;
+   } 
+   requestAnimationFrame(updateFps);
+  }
+   window.addEventListener("load", () => { requestAnimationFrame(updateFps); });
+
+function updateShowFPSToggleButton() {
+  const button = document.getElementById("showFPSToggleButton");
+  button.innerText = showFPS ? "FPS Counter: Enabled" : "FPS Counter: Disabled";
+  button.className = showFPS ? "settingsButton settingsButtonEnabled" : "settingsButton settingsButtonDisabled";
 }
 
 // Load settings when the page is loaded
 window.onload = function () {
   const savedSetting1 = getCookie("openGamesInNewTab");
   const savedSetting2 = getCookie("tabCloakGames");
+  const savedSetting3 = getCookie("showFPSEnabled");
   if (savedSetting1 !== null) {
     openGamesInNewTab = savedSetting1 === "true"; // Convert string to boolean
   }
   if (savedSetting2 !== null) {
     tabCloakGames = savedSetting2 === "true"; // Convert string to boolean
   }
+  if (savedSetting3 !== null) {
+    showFPS = savedSetting3 === "true"; // Convert String to boolean
+  }
   updateOpenGamesInNewTabToggleButton(); // Update button based on saved setting
   updateTabCloakGamesToggleButton();
+  updateShowFPSToggleButton();
 };
 
 function OpenInBlank(url) {
@@ -269,8 +304,6 @@ function initiateAudioCheck() {
   }, 1000);
 }
 
-initiateAudioCheck(); // 10/29/24 8:59:00 AM - I just realized that the audio was not working because the function was never called lmao
-
 function hideChangelog() {
   const popup = document.getElementById("center-container");
   if (popup) {
@@ -287,6 +320,8 @@ function ToggleGames() {
   showGames = !showGames;
   if (showGames) {
     //show games
+    const message = document.getElementById("floatingMessage");
+    message.innerText = "";
     document.getElementById("MenuBarContainer").style.display = "flex";
     document.getElementById("regular-footer").style.display = "none";
     document.getElementById("ButtonsContainer").style.display = "none";
@@ -317,6 +352,8 @@ function ToggleChanges() {
   showChanges = !showChanges;
   if (showChanges) {
     //show changes
+    const message = document.getElementById("floatingMessage");
+    message.innerText = "";
     document.getElementById("MenuBarContainer").style.display = "flex";
     document.getElementById("regular-footer").style.display = "none";
     document.getElementById("ButtonsContainer").style.display = "none";
@@ -342,6 +379,9 @@ function ToggleChanges() {
 }
 
 function GoHome() {
+  const message = document.getElementById("floatingMessage");
+  const randomMessage = possibleMessages[Math.floor(Math.random() * possibleMessages.length)];
+  message.innerText = randomMessage;
   document.getElementById("MenuBarContainer").style.display = "none";
   document.getElementById("regular-footer").style.display = "flex";
   document.getElementById("ButtonsContainer").style.display = "flex";
@@ -2180,7 +2220,7 @@ const gamesData = [
     redirect: false,
   },
 ];
-// need to fix mgs, and run games
+
 
 let rows = 0;
 let collumns = 0;
@@ -2221,12 +2261,16 @@ function renderGames(games) {
 
 const changesData = [
   {
+    version: "2.1.8",
+    url: "changes/2.1.8.html"
+  },
+  {
     version: "2.1.7",
-    url: "changes/2.1.7.html",
+    url: "changes/2.1.7.html"
   },
   {
     version: "2.1.6",
-    url: "changes/2.1.6.html",
+    url: "changes/2.1.6.html"
   },
   {
     version: "2.1.5",
@@ -2335,6 +2379,399 @@ const checkIntervalChanges = setInterval(function () {
     alreadyFixedChanges = true;
   }
 }, 500);
+
+const possibleMessages = [
+  "Welcome to Obsidians Unblocked!",
+  "This website has 2810+ lines of code! (Not including games)",
+  "Star the github repo!",
+  "What's 9+10?",
+  "This website is a remake of the original Obsidians Unblocked!",
+  "Thx Chat Gpt!",
+  "Have fun!",
+  "I’m here to distract you.",
+  "Do not push the red button!",
+  "Made you look!",
+  "High five, internet friend!",
+  "Why did the chicken cross the website?",
+  "Careful, I’m contagious!",
+  "Can you keep a secret?",
+  "I came, I saw, I floated.",
+  "The book reached its climax, and so did I.",
+  "Aren’t you glad you’re here?",
+  "May the internet be with you!",
+  "Come back often!",
+  "Tell your friends about the website!",
+  "Plot twist: It’s me again!",
+  "You can’t escape me.",
+  "You're next.",
+  "Behind you.",
+  "I’m closer than you think.",
+  "You can’t escape your own thoughts.",
+  "Don’t try to leave. You’re already part of this.",
+  "The more you read, the stronger I get.",
+  "Can you feel the cold? That’s me getting closer.",
+  "Don’t think I won’t find you.",
+  `if ("bugs" in nature) { console.log("Error: Too many bugs!"); }`,
+  `let balance = 0; if (balance === 0) { console.log("I can't afford coffee!"); }`,
+  `let relationship = "recursive";
+while (relationship === "recursive") {
+    console.log("This is going nowhere!");
+    break;
+}`,
+`$balance = null;
+if (is_null($balance)) {
+    echo "Balance is null, can't buy anything!";
+}
+`,
+"Who programmed this thing, anyway?",
+"You can't unsee this. Enjoy!",
+"We meet again… or is this the first time?",
+"This website might know more about you than you think.",
+"Click if you dare.",
+"Are you sure you're ready for what's next?",
+  "I wonder what you’ll find here.",
+  "This is only the beginning, isn’t it?",
+  "Curiosity can lead to unexpected places.",
+  "How long can you resist clicking the next thing?",
+  "Did you just discover something new?",
+  "Sometimes the unknown is the best part.",
+  "You've unlocked a secret. Keep going.",
+  "Not everything needs a reason, but you’re asking anyway.",
+  "I see you've made a choice, but is it the right one?",
+  "You won't know what happens until you click.",
+  "The deeper you go, the more you see.",
+  "I don’t know where this path leads, but I’m curious too.",
+  "There's always something more to discover.",
+  "Don’t worry, I’m not going anywhere.",
+  "Have you clicked everything yet? You should.",
+  "It’s funny how you can find what you're looking for by accident.",
+  "What are you really looking for? Only you know.",
+  "You think you're done, but I promise you're not.",
+  "How much more can you explore? Let’s find out.",
+  "Are you trying to escape or just stay curious?",
+  "If you think you’ve seen it all, think again.",
+  "Sometimes the best secrets are hidden in plain sight.",
+  "What’s next? You tell me.",
+  "You can never know too much… or can you?",
+  "You’ve seen it, now what do you do?",
+  "Everything you’re looking for is just a click away.",
+  "I’m here, and I’m not going anywhere.",
+  "Don’t worry, I won’t bite. Or will I?",
+  "It’s just a little message. Nothing to see here… or is there?",
+  "I’m not your typical pop-up. Maybe I’m more.",
+  "Are you sure you’re ready to leave?",
+  "You’ve only scratched the surface.",
+  "What are you waiting for? Go on, click it.",
+  "The web is a vast place, but I’m right here.",
+  "Sometimes, the fun starts when you least expect it.",
+  "I’m always here if you need me.",
+  "No need to rush. Take your time.",
+  "Everything you see here is just a part of the whole.",
+  "There’s a lot more behind the scenes than you think.",
+  "You didn’t think this was just a simple website, did you?",
+  "There’s no turning back now.",
+  "You’ve opened a door. Now, what lies beyond?",
+  "Things aren’t always as they seem, but you’ll figure it out.",
+  "The deeper you dig, the more you find.",
+  "I know what you’re thinking, but do you?",
+  "You’ve only begun to explore.",
+  "I won’t be here forever, so make it count.",
+  "The best things are always a few clicks away.",
+  "I’m always one click away. Always.",
+  "Don’t worry, this isn’t the end.",
+  "You can leave whenever you want, but why would you?",
+  "Have you discovered everything? Probably not.",
+  "What you’re looking for might just be hiding in plain sight.",
+  "I’m always watching. Are you?",
+  "Take a step back, or take a step forward. Your choice.",
+  "Have you checked everything yet? Probably not.",
+  "You know what they say… curiosity killed the cat. Or did it?",
+  "I’m just a click away from giving you more.",
+  "This is the part where you keep going, right?",
+  "Everything is connected in ways you don’t expect.",
+  "You won’t know until you try, right?",
+  "This is only one page of a much bigger story.",
+  "You can’t unsee what you’ve already seen.",
+  "One more click and who knows what will happen.",
+  "Are you brave enough to keep exploring?",
+  "You’ll never know if you don’t keep clicking.",
+  "The journey’s not over yet. Stay curious.",
+  "I might be a message, but I have a story to tell.",
+  "I’ve been here all along, waiting for you.",
+  "The fun starts after the first click.",
+  "You can’t leave yet, the best part is just beginning.",
+  "Curiosity never truly ends.",
+  "I’m just the beginning of something much bigger.",
+  "Don’t rush. Let the adventure unfold.",
+  "I’m not the only thing here, but I’m one of the most interesting.",
+  "Let’s see where this path leads.",
+  "One message. Infinite possibilities.",
+  "There's always something more to uncover.",
+  "Every click brings something new.",
+  "What you’re looking for might just be one click away.",
+  "Every moment you spend here counts.",
+  "Sometimes, you just have to click to know more.",
+  "You can’t undo what you’ve just discovered.",
+  "I wonder what you’ll find if you keep clicking.",
+  "Have you ever wondered how deep the internet really goes?",
+  "I’m not done with you yet. Not by a long shot.",
+  "(╯°□°）╯︵ ┻━┻",
+  "¯\\_(ツ)_/¯",
+  "(｡♥‿♥｡)",
+  "(╥﹏╥)",
+  "(¬‿¬)",
+  "(¬_¬)",
+  "(¬_¬)ノ",
+  "(•_•)",
+  "(ʘ‿ʘ)",
+  "ヽ(＾Д＾)ﾉ",
+  "(≧◡≦)",
+  "(╯︵╰,)",
+  "( ͡° ͜ʖ ͡°)",
+  "(¬‿¬)",
+  "┻━┻︵╰(°□°)╯︵┻━┻",
+  "(╯°□°）╯︵ ┻━┻",
+  "(*≧ω≦)",
+  "(✿◠‿◠)",
+  "(｡•́‿•̀｡)",
+  "(●´ω｀●)",
+  "(°ロ°) !",
+  "(╯✧∇✧)╯",
+  "(つ◕౪◕)つ━☆ﾟ.*･｡ﾟ",
+  "(˘︶˘).｡.:*♡",
+  "(っ˘ڡ˘ς)",
+  "( •_•)>⌐■-■",
+  "ヽ(●´∀｀●)ﾉ",
+  "(＾▽＾)",
+  "(* >ω<)",
+  "(っ- ‸ – ς)",
+  "＼(º □ º l|l)/＼",
+  "(￣ー￣)",
+  "ヽ(＾Д＾)ﾉ",
+  "(≖‿≖)",
+  "(｡•́︿•̀｡)",
+  "( ˘︹˘ )",
+  "(￣ω￣)",
+  "(¬_¬ )",
+  "(づ｡◕‿‿◕｡)づ",
+  "(⌐■_■)",
+  "(✪ω✪)",
+  "(°⌓°)",
+  "(￣^￣)",
+  "(•̀ᴗ•́)و ̑̑",
+  "ʕ•ᴥ•ʔ",
+  "ᕙ(⇀‸↼‶)ᕗ",
+  "(╯°A°）╯",
+  "(*^‿^*)",
+  "(｡•́‿•̀｡)",
+  "(✪ω✪)",
+  "(-‿-)",
+  "(╥_╥)",
+  "ᕙ( •̀ ‸ •́ )ᕗ",
+  "(｡♥‿♥｡)",
+  "(‾◡◝)",
+  "(._.')",
+  "(◕‿◕✿)",
+  "(･ω･)",
+  "(╬ ಠ益ಠ)",
+  "(¬_¬\")",
+  "(-_•)",
+  "(⌐■_■)",
+  "(ಥ﹏ಥ)",
+  "(×_×;）",
+  "(╯‵□′)╯︵┻━┻",
+  "(︶︹︶)",
+  "(*´Д｀*)",
+  "(★^O^★)",
+  "(｡•́‿•̀｡)",
+  "(╯✧∇✧)╯",
+  "(✿◠‿◠)",
+  "(っ˘ڡ˘ς)",
+  "(｡•́‿•̀｡)",
+  "(｀_´)",
+  "(⊙_☉)",
+  "(◕︵◕)",
+  "╰(°▽°)╯",
+  "ヽ(＾Д＾)ﾉ",
+  "¯\\_(ツ)_/¯",
+  "(¬‿¬)",
+  "(¬_¬)",
+  "(¬_¬)ノ",
+  "(•_•)",
+  "(ʘ‿ʘ)",
+  "(°ロ°) !",
+  "(⌐■_■)",
+  "(▀̿Ĺ̯▀̿ ̿)",
+  "( ಠ_ಠ )",
+  "ヽ(●´∀｀●)ﾉ",
+  "(╯✧∇✧)╯",
+  "(•̀ᴗ•́)و ̑̑",
+  "(╬ Ò﹏Ó)",
+  "(⊙_☉)",
+  "(⌣́_⌣̀)",
+  "(╥_╥)",
+  "(¬_¬ )",
+  "(◕⩊◕)",
+  "(︶︹︶)",
+  "(╯°A°）╯",
+  "(-_-)ゞ゛",
+  "(/ﾟДﾟ)/",
+  "(╥﹏╥)",
+  "(▰˘︹˘▰)",
+  "(¬‿¬ )",
+  "(▰˘︹˘▰)",
+  "(☞ﾟヮﾟ)☞",
+  "(ᗒᗨᗕ)",
+  "(⌐■_■)",
+  "(°⌓°)",
+  "(°_°)",
+  "(¬_¬')",
+  "ᕙ(⇀‸↼‶)ᕗ",
+  "╭(°A°`)╮",
+  "(•_•)>⌐■-■",
+  "(≖‿≖)",
+  "(▀̿Ĺ̯▀̿ ̿)",
+  "(☞ﾟヮﾟ)☞",
+  "(•_•)>⌐■-■",
+  "(•̀_•́)ᕤ",
+  "(ᕙ( •̀ ‸ •́ )ᕗ",
+  "(ᗒᗨᗕ)",
+  "(⊙_☉)",
+  "(╯°A°）╯",
+  "(╯‵□′)╯︵┻━┻",
+  "(╬ ಠ益ಠ)",
+  "∩(︶▽︶)∩",
+  "(╬ﾟ◥益◤ﾟ)",
+  "(｡•́︿•̀｡)",
+  "(-_•)",
+  "(。_.)",
+  "(¬_¬)",
+  "(•_•)",
+  "(﹏)",
+  "(⇀‸↼)",
+  "(⊙▃⊙)",
+  "(o_o)",
+  "(=_=)",
+  "(@_@)",
+  "( ° ͜ʖ ° )",
+  "(≡^∇^≡)",
+  "(≖_≖ )",
+  "(⊙_☉)",
+  "(⇀‸↼)",
+  "( ͡° ͜ʖ ͡°)",
+  "(⌐■_■)",
+  "( • )( • )",
+  "(. Y .)",
+  "⎛⎝(•ⱅ•)⎠⎞	",
+  "☉_☉",
+  "( • )( • ) ԅ(‾⌣‾ԅ)",
+  "ᕕ( ᐛ )ᕗ",
+  "ᕕ( ͡° ͜ʖ ͡° )ᕗ",
+  "ミ ᕕ(ᐛ) ᕗ",
+  "ᕕ(⌐■_■)ᕗ ♪♬",
+  "( -_･) ︻デ═一' * (/❛o❛)/",
+  "╭( ๐_๐)╮",
+  "c( O.O )ɔ",
+  "˚ ▱ ˚",
+  "╭( ๐ _๐)╮",
+  "( ͡° ͜ ͡°) wake up",
+  "Why don’t skeletons fight each other? They don’t have the guts!",
+  "I told my computer I needed a break, now it won’t stop sending me Kit-Kats.",
+  "I would tell you a joke about UDP, but you probably wouldn’t get it.",
+  "Why did the web developer go broke? Because he used up all his cache!",
+  "Parallel lines have so much in common. It’s a shame they’ll never meet.",
+  "Why do programmers prefer dark mode? Because the light attracts bugs!",
+  "I was wondering why the frisbee kept getting bigger, but then it hit me.",
+  "I used to play piano by ear, but now I use my hands.",
+  "What do you call fake spaghetti? An impasta!",
+  "What’s orange and sounds like a parrot? A carrot!",
+  "Knock knock. Who’s there? Interrupting cow. Interrupting cow wh- MOO!",
+  "I can’t believe I got fired from the calendar factory. All I did was take a day off!",
+  "I told my wife she was drawing her eyebrows too high. She looked surprised!",
+  "I’m reading a book about anti-gravity. It’s impossible to put down!",
+  "What did one ocean say to the other ocean? Nothing, they just waved.",
+  "Why did the chicken join a band? Because it had the drumsticks!",
+  "Why do cows wear bells? Because their horns don’t work!",
+  "I asked my dog what’s two minus two. He said nothing.",
+  "Why don’t oysters donate to charity? Because they’re shellfish!",
+  "What do you call cheese that isn’t yours? Nacho cheese!",
+  "I told my computer I needed a break, now it keeps sending me Kit-Kats!",
+  "Why can’t you trust an atom? Because they make up everything!",
+  "I used to be a baker, but I couldn't make enough dough.",
+  "How does a penguin build its house? Igloos it together!",
+  "Why do programmers hate nature? It has too many bugs!",
+  "What do you call a fish with no eyes? Fsh.",
+  "Why did the scarecrow win an award? Because he was outstanding in his field!",
+  "What did the 0 say to the 8? Nice belt!",
+  "I’m reading a book about anti-gravity – it’s impossible to put down!",
+  "If I had a dollar for every time I got distracted, I wish I had a puppy.",
+  "Why don't skeletons ever fight each other? They don't have the guts!",
+  "I tried to catch some fog earlier. I mist.",
+  "I couldn't figure out how to put my seatbelt on. Then it clicked.",
+  "What’s the best way to watch a fly fishing tournament? Live stream.",
+  "I named my dog 'Five Miles' so I can say I walk Five Miles every day.",
+  "My wife told me to stop impersonating a flamingo. I had to put my foot down.",
+  "What’s a skeleton’s least favorite room in the house? The living room.",
+  "I used to be a baker, but I couldn’t make enough dough.",
+  "Why don’t eggs tell jokes? They’d crack each other up!",
+  "What’s a ghost’s favorite dessert? I scream!",
+  "I made a pun about the wind, but it blows.",
+  "What did the tomato say to the other tomato? You’re saucy!",
+  "Why can’t you hear a pterodactyl go to the bathroom? Because the P is silent.",
+  "Why did the golfer bring two pairs of pants? In case he got a hole in one!",
+  "I told my wife she was drawing her eyebrows too high. She looked surprised!",
+  "If I had a dollar for every time I got distracted, I’d spend it on something else.",
+  "I told my computer I needed a break, and now it’s giving me pop-up ads.",
+  "I don’t trust stairs because they’re always up to something!",
+  "What do you get when you cross a snowman with a vampire? Frostbite!",
+  "I’m on a whiskey diet. I’ve lost three days already!",
+  "I used to be a baker, but I couldn't make enough dough.",
+  "Why don’t oysters share their pearls? Because they’re shellfish!",
+  "I used to play piano by ear, but now I use my hands.",
+  "Why don't skeletons fight each other? They don’t have the guts!",
+  "How does a penguin build its house? Igloos it together!",
+  "Sigma sigma on the wall, Who's the skibidiest of them all?",
+  "Are you going to the tiktok rizz party?",
+  "That feeling when, Knee Surgery Is Tomorrow.",
+  "That feeling when, Knee Surgery Is Tomorrow.",
+  "That feeling when, Knee Surgery Is Tomorrow.",
+  "That feeling when, Knee Surgery Is Tomorrow.",
+  "That feeling when, Knee Surgery Is Tomorrow.",
+  "That feeling when, Knee Surgery Is Tomorrow.",
+  "That feeling when, Knee Surgery Is Tomorrow.",
+  "That feeling when, Knee Surgery Is Tomorrow.",
+  "That feeling when, Knee Surgery Is Tomorrow.",
+  "That feeling when, Knee Surgery Is Tomorrow.",
+  "That feeling when, Knee Surgery Is Tomorrow.",
+  "That feeling when, Knee Surgery Is Tomorrow.",
+  "That feeling when, Knee Surgery Is Tomorrow.",
+  "Crazy? I was crazy once",
+  "They locked me in a room....",
+  "A rubber room..",
+  "A rubber room with rats...",
+  "Rats make me crazy..",
+  "Crazy? I was crazy once.",
+  "Do you know Victorias Secret?",
+  "Oh Yeah!",
+  "Connor, The fuck are you doing?",
+  "Mike Tyson, or Jake Paul?",
+  "Dexter Morgan.. Is alive?",
+  "Don't you have some school work to be doing?",
+  "Homelander Vs. Omni Man, Who wins?",
+  "Brent Peterson for president!",
+  "Rip Smash Mouth :(",
+  "What if Ninja had a low taper fade?",
+  "The low taper fade meme is still MASSIVE!",
+];
+
+document.addEventListener("DOMContentLoaded", () => {
+  const message = document.getElementById("floatingMessage");
+  const randomMessage = possibleMessages[Math.floor(Math.random() * possibleMessages.length)];
+  message.innerText = randomMessage;
+});
+
+
+
 
 // Particle system and other logic
 const scene = new THREE.Scene();
