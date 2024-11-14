@@ -2019,7 +2019,7 @@ const gamesData = [
   },
   {
     name: "Mortal Kombat 4",
-    img: "assets/mortalKombat4.jpg",
+    img: "assets/mortalkombat4.jpg",
     url: "games/mortalKombat4/index.html",
     redirect: false,
   },
